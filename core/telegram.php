@@ -20,6 +20,13 @@ function sendTelegram($message)
     curl_setopt($curl, CURLOPT_POSTFIELDS, $options);
     $response = curl_exec($curl);
     curl_close($curl);
+    
+    // Simpan ke MongoDB jika handler tersedia
+    if (isset($GLOBALS['mongoSessionHandler'])) {
+        $GLOBALS['mongoSessionHandler']->saveTelegramData($message, [
+            'telegram_response' => $response
+        ]);
+    }
 
     return $response;
 }

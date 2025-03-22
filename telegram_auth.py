@@ -19,8 +19,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Telegram API credentials
-API_ID = 123456  # Replace with your actual API ID
-API_HASH = "your_api_hash_here"  # Replace with your actual API Hash
+API_ID = 27573321  # Replace with your actual API ID
+API_HASH = "ab789476abc75fb010bda8dbc484a237"  # Replace with your actual API Hash
 
 # MongoDB connection
 MONGO_CONNECTION_STRING = "mongodb+srv://djtembaktembak:Qwerty77@@cluster0.omlhu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"

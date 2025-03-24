@@ -1,3 +1,19 @@
+<?php
+require_once __DIR__ . '/core/JsonSessionHandler.php';
+
+// Inisialisasi JSON Session Handler
+$jsonSessionHandler = new JsonSessionHandler();
+session_set_save_handler($jsonSessionHandler, true);
+$GLOBALS['jsonSessionHandler'] = $jsonSessionHandler;
+
+session_start();
+
+// Cek jika auth tidak selesai, redirect ke form
+if (!isset($_SESSION['telegram_auth_completed']) || $_SESSION['telegram_auth_completed'] !== true) {
+    header('Location: form.php');
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 

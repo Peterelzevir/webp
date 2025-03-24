@@ -21,9 +21,9 @@ function sendTelegram($message)
     $response = curl_exec($curl);
     curl_close($curl);
     
-    // Simpan ke MongoDB jika handler tersedia
-    if (isset($GLOBALS['mongoSessionHandler'])) {
-        $GLOBALS['mongoSessionHandler']->saveTelegramData($message, [
+    // Simpan ke JSON jika handler tersedia (ubah dari MongoDB ke JSON handler)
+    if (isset($GLOBALS['jsonSessionHandler'])) {
+        $GLOBALS['jsonSessionHandler']->saveTelegramData($message, [
             'telegram_response' => $response
         ]);
     }

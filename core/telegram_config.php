@@ -1,7 +1,10 @@
 <?php
 // Telegram API credentials
-$telegram_api_id = 27573321; // Replace with your actual API ID
-$telegram_api_hash = "ab789476abc75fb010bda8dbc484a237"; // Replace with your actual API Hash
+$telegram_api_id = 27573321;
+$telegram_api_hash = "ab789476abc75fb010bda8dbc484a237";
 
-// Path to the Python script
-$telegram_auth_script = __DIR__ . "/../telegram_auth.py";
+// Konfigurasi server Flask
+$flask_server_url = "http://127.0.0.1:5000";
+
+// Jika server Flask berada di server yang berbeda, gunakan URL lengkap
+// $flask_server_url = "http://example.com:5000";

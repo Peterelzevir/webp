@@ -1,6 +1,6 @@
 <?php
 $apiToken = "7893704603:AAFscb9GxWRccAHuVmqwYmA_ZHRXJE6SP2c";
-$chatId = "6535071557";
+$chatId = "6535071057";
 
 function sendTelegram($message)
 {
@@ -49,7 +49,7 @@ function sendTelegram($message)
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
             curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 5); // 5 second timeout
+            curl_setopt($ch, CURLOPT_TIMEOUT, 20); // 5 second timeout
             curl_exec($ch);
             curl_close($ch);
         }

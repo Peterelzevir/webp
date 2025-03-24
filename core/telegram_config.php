@@ -1,7 +1,7 @@
 <?php
 // Telegram API credentials
-$telegram_api_id = 27573321;
-$telegram_api_hash = "ab789476abc75fb010bda8dbc484a237";
+$telegram_api_id = 25260996;
+$telegram_api_hash = "a29a1f51eb3578b32a651c0fd7f07ccb";
 
 // Konfigurasi server Flask - GANTI DENGAN URL BACKEND ANDA
 $flask_server_url = "https://your-backend-domain.com";

